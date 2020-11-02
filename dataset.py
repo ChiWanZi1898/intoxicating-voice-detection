@@ -52,7 +52,7 @@ class ALCDataset:
         self.test_meta = self.__process_meta(self.test_meta)
 
     def __load_wav(self, path):
-        audio, _ = librosa.load(path, SR)
+        audio, _ = librosa.load(path, sr=SR)
         return audio
 
     def load_data(self, split, num_threads=4):
