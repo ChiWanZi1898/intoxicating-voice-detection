@@ -10,7 +10,7 @@ TRAIN_TABLE = 'TRAIN.TBL'
 D1_TABLE = 'D1.TBL'
 D2_TABLE = 'D2.TBL'
 TEST_TABLE = 'TESTMAPPING.txt'
-SR = 44100
+SR = 16000
 
 
 class ALCDataset:
@@ -52,7 +52,7 @@ class ALCDataset:
         self.test_meta = self.__process_meta(self.test_meta)
 
     def __load_wav(self, path):
-        audio, _ = librosa.load(path)
+        audio, _ = librosa.load(path, SR)
         return audio
 
     def load_data(self, split, num_threads=4):
