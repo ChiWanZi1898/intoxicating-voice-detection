@@ -35,32 +35,30 @@ class ALCDataset:
         doc_folder = os.path.join(self.dataset_path, DOC_PATH)
 
         train_meta_path = os.path.join(doc_folder, TRAIN_TABLE)
-        # just read first 20% lines
-        line_num = twenty_percent_file_len(train_meta_path)
-        self.train_meta = pd.read_csv(train_meta_path, sep='\t', names=['file_name', 'bac', 'user_state'], nrows = line_num)
-        # if want to read all lines, just delete nrows as below
-        # self.train_meta = pd.read_csv(train_meta_path, sep='\t', names=['file_name', 'bac', 'user_state'])
+        self.train_meta = pd.read_csv(train_meta_path, sep='\t', names=['file_name', 'bac', 'user_state'])
         self.train_meta = self.__process_meta(self.train_meta)
+        # just read first 20% lines
+        # self.train_meta = self.train_meta.iloc[:len(self.train_meta)//5,:]
 
         d1_meta_path = os.path.join(doc_folder, D1_TABLE)
-        # just read first 20% lines
-        line_num = twenty_percent_file_len(d1_meta_path)
-        self.d1_meta = pd.read_csv(d1_meta_path, sep='\t', names=['file_name', 'bac', 'user_state'], nrows = line_num)
+        self.d1_meta = pd.read_csv(d1_meta_path, sep='\t', names=['file_name', 'bac', 'user_state'])
         self.d1_meta = self.__process_meta(self.d1_meta)
+        # just read first 20% lines
+        # self.d1_meta = self.d1_meta.iloc[:len(self.d1_meta)//5,:]
 
         d2_meta_path = os.path.join(doc_folder, D2_TABLE)
-        # just read first 20% lines
-        line_num = twenty_percent_file_len(d2_meta_path)
-        self.d2_meta = pd.read_csv(d2_meta_path, sep='\t', names=['file_name', 'bac', 'user_state'], nrows = line_num)
+        self.d2_meta = pd.read_csv(d2_meta_path, sep='\t', names=['file_name', 'bac', 'user_state'])
         self.d2_meta = self.__process_meta(self.d2_meta)
+        # just read first 20% lines
+        # self.d2_meta = self.d2_meta.iloc[:len(self.d2_meta)//5,:]
 
         test_meta_path = os.path.join(doc_folder, TEST_TABLE)
-        # just read first 20% lines
-        line_num = twenty_percent_file_len(test_meta_path)
         self.test_meta = pd.read_csv(test_meta_path, sep='\t',
-                                     names=['file_name', 'bac', 'user_state', 'test_file_name'], nrows = line_num)
+                                     names=['file_name', 'bac', 'user_state', 'test_file_name'])
         self.test_meta = self.test_meta[['file_name', 'bac', 'user_state']]
         self.test_meta = self.__process_meta(self.test_meta)
+        # just read first 20% lines
+        # self.test_meta = self.test_meta.iloc[:len(self.test_meta)//5,:]
 
     def __load_wav(self, path):
         audio, _ = librosa.load(path, sr=SR)
@@ -105,15 +103,13 @@ class ALCDataset:
     def slice_data(self, data: list, meta, k: int) -> Tuple[list, list]:
         sliced_data = list()
         sliced_meta = list()
+        d_len = k * SR
+        j = 0
         for line in data:
-            line = line[:k]
-            sliced_data.append(line)
-        for label in meta['label']:
-            sliced_meta.append(label)
+            times = len(line) // d_len
+            for i in range(times):
+                tmp = line[(i * d_len) : ((i + 1) * d_len)]
+                sliced_data.append(tmp)
+                sliced_meta.append(meta['label'][j])
+            j += 1
         return sliced_data, sliced_meta
-
-def twenty_percent_file_len(fname: str) -> int:
-    with open(fname) as f:
-        for i, l in enumerate(f):
-            pass
-    return (i + 1) // 5
