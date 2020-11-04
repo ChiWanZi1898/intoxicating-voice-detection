@@ -38,28 +38,20 @@ class ALCDataset:
         train_meta_path = os.path.join(doc_folder, TRAIN_TABLE)
         self.train_meta = pd.read_csv(train_meta_path, sep='\t', names=['file_name', 'bac', 'user_state'])
         self.train_meta = self.__process_meta(self.train_meta)
-        # just read first 20% lines
-        # self.train_meta = self.train_meta.iloc[:len(self.train_meta)//5,:]
 
         d1_meta_path = os.path.join(doc_folder, D1_TABLE)
         self.d1_meta = pd.read_csv(d1_meta_path, sep='\t', names=['file_name', 'bac', 'user_state'])
         self.d1_meta = self.__process_meta(self.d1_meta)
-        # just read first 20% lines
-        # self.d1_meta = self.d1_meta.iloc[:len(self.d1_meta)//5,:]
 
         d2_meta_path = os.path.join(doc_folder, D2_TABLE)
         self.d2_meta = pd.read_csv(d2_meta_path, sep='\t', names=['file_name', 'bac', 'user_state'])
         self.d2_meta = self.__process_meta(self.d2_meta)
-        # just read first 20% lines
-        # self.d2_meta = self.d2_meta.iloc[:len(self.d2_meta)//5,:]
 
         test_meta_path = os.path.join(doc_folder, TEST_TABLE)
         self.test_meta = pd.read_csv(test_meta_path, sep='\t',
                                      names=['file_name', 'bac', 'user_state', 'test_file_name'])
         self.test_meta = self.test_meta[['file_name', 'bac', 'user_state']]
         self.test_meta = self.__process_meta(self.test_meta)
-        # just read first 20% lines
-        # self.test_meta = self.test_meta.iloc[:len(self.test_meta)//5,:]
 
     def __load_wav(self, path):
         audio, _ = librosa.load(path, sr=SR)
