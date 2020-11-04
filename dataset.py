@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import os
 import librosa
 from queue import Queue
@@ -64,10 +65,15 @@ class ALCDataset:
         audio, _ = librosa.load(path, sr=SR)
         return audio
 
-    def load_data(self, split, num_threads=4):
+    def load_data(self, split, percentage=0.2, num_threads=4):
         split = split.lower()
         assert split in ('train', 'd1', 'd2', 'test')
+        assert 0 <= percentage <= 1
+
         meta = getattr(self, f'{split}_meta')
+        # Only load part of the dataset to avoid OOM
+        partial_meta = meta[:int(len(meta) * percentage)]
+
         audios_list = [{} for _ in range(num_threads)]
         q = Queue()
 
@@ -81,7 +87,7 @@ class ALCDataset:
                 q.task_done()
             return True
 
-        for file_name in meta['file_name']:
+        for file_name in partial_meta['file_name']:
             q.put(file_name)
 
         for i in range(num_threads):
@@ -95,21 +101,19 @@ class ALCDataset:
             audios.update(audios_list[i])
 
         data = []
-        for file_name in meta['file_name']:
+        for file_name in partial_meta['file_name']:
             data.append(audios[file_name])
 
         return data, meta
 
-    def slice_data(self, data: list, meta, k: int) -> Tuple[list, list]:
-        sliced_data = list()
-        sliced_meta = list()
+    def slice_data(self, data, meta, k):
+        sliced_data = []
+        sliced_meta = []
         d_len = k * SR
-        j = 0
-        for line in data:
+        for j, line in enumerate(data):
             times = len(line) // d_len
             for i in range(times):
-                tmp = line[(i * d_len) : ((i + 1) * d_len)]
+                tmp = line[i * d_len: (i + 1) * d_len]
                 sliced_data.append(tmp)
                 sliced_meta.append(meta['label'][j])
-            j += 1
-        return sliced_data, sliced_meta
+        return np.stack(sliced_data), np.stack(sliced_meta)
