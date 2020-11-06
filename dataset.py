@@ -95,17 +95,7 @@ class ALCDataset:
         data = []
         for file_name in partial_meta['file_name']:
             data.append(audios[file_name])
+        
+        label = meta['label'].to_numpy()
 
-        return data, meta
-
-    def slice_data(self, data, meta, k):
-        sliced_data = []
-        sliced_meta = []
-        d_len = k * SR
-        for j, line in enumerate(data):
-            times = len(line) // d_len
-            for i in range(times):
-                tmp = line[i * d_len: (i + 1) * d_len]
-                sliced_data.append(tmp)
-                sliced_meta.append(meta['label'][j])
-        return np.stack(sliced_data), np.stack(sliced_meta)
+        return data, label
