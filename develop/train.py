@@ -74,19 +74,25 @@ class ALCModel:
         self.clf = pickle.load(open(filename, "rb"))
 
 
-def load_data(method='full', dimension=50, use_dev=True, balance=True):
+def load_data(feature='surfboard', method='full', dimension=50, use_dev=True, balance=True):
+    assert feature in ['surfboard', 'opensmile']
     assert dim_reduct in ['full', 'pca', 'ica']
     
-    train_x = np.load(os.path.join(FEATURE_PATH, 'train_x.npy'), allow_pickle=True)
-    train_y = np.load(os.path.join(FEATURE_PATH, 'train_y.npy'), allow_pickle=True)
-    test_x = np.load(os.path.join(FEATURE_PATH, 'test_x.npy'), allow_pickle=True)
-    test_y = np.load(os.path.join(FEATURE_PATH, 'test_y.npy'), allow_pickle=True)
+    if feature == 'surfboard':
+        feature_path = SURFBOARD_FEATURE_PATH
+    else:
+        feature_path = OPENSMILE_FEATURE_PATH
+    
+    train_x = np.load(os.path.join(feature_path, 'train_x.npy'), allow_pickle=True)
+    train_y = np.load(os.path.join(feature_path, 'train_y.npy'), allow_pickle=True)
+    test_x = np.load(os.path.join(feature_path, 'test_x.npy'), allow_pickle=True)
+    test_y = np.load(os.path.join(feature_path, 'test_y.npy'), allow_pickle=True)
     
     if use_dev:
-        dev1_x = np.load(os.path.join(FEATURE_PATH, 'd1_x.npy'), allow_pickle=True)
-        dev1_y = np.load(os.path.join(FEATURE_PATH, 'd1_y.npy'), allow_pickle=True)
-        dev2_x = np.load(os.path.join(FEATURE_PATH, 'd2_x.npy'), allow_pickle=True)
-        dev2_y = np.load(os.path.join(FEATURE_PATH, 'd2_y.npy'), allow_pickle=True)
+        dev1_x = np.load(os.path.join(feature_path, 'd1_x.npy'), allow_pickle=True)
+        dev1_y = np.load(os.path.join(feature_path, 'd1_y.npy'), allow_pickle=True)
+        dev2_x = np.load(os.path.join(feature_path, 'd2_x.npy'), allow_pickle=True)
+        dev2_y = np.load(os.path.join(feature_path, 'd2_y.npy'), allow_pickle=True)
         train_x = np.concatenate([train_x, dev1_x, dev2_x])
         train_y = np.concatenate([train_y, dev1_y, dev2_y])
         
@@ -124,6 +130,7 @@ def load_data(method='full', dimension=50, use_dev=True, balance=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='args for model training')
+    parser.add_argument('--feature', '-f', help='feature extraction toolbox', default='surfboard')
     parser.add_argument('--model', '-M', help='machine learning model', default='svm')
     parser.add_argument('--method', '-m', help='dimension reduction method', default='full')
     parser.add_argument('--dim', '-d', help='dimension after PCA or ICA', default=50)
@@ -132,7 +139,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     print('Loading data...')
-    train_data, trian_label, test_data, test_label = load_data(method=args.method, 
+    train_data, trian_label, test_data, test_label = load_data(feature=args.feature,
+                                                               method=args.method, 
                                                                dimension=args.dim, 
                                                                use_dev=args.usedev, 
                                                                balance=args.balance)
@@ -144,7 +152,10 @@ if __name__ == "__main__":
     print('Finished!')
     
     print('Saving model...')
-    model.save_model(MODEL_PATH)
+    if args.feature == 'surfboard':
+        model.save_model(SURFBOARD_MODEL_PATH)
+    if args.feature == 'opensmile':
+        model.save_model(OPENSMILE_MODEL_PATH)
     print('Finished!')
     
     print('Classification report on test data:')

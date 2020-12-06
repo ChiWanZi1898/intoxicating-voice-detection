@@ -1,11 +1,22 @@
 import os
+import argparse
 import pandas as pd
 import numpy as np
 import subprocess
 from tqdm import tqdm
 import sys
+from surfboard.sound import Waveform
+from surfboard.feature_extraction import extract_features
 
 from config import *
+
+
+DOC_PATH = 'alc_original/DOC/IS2011CHALLENGE'
+DATA_PATH = 'alc_original'
+TRAIN_TABLE = 'TRAIN.TBL'
+D1_TABLE = 'D1.TBL'
+D2_TABLE = 'D2.TBL'
+TEST_TABLE = 'TESTMAPPING.txt'
 
 
 class ALCDataset:
@@ -43,7 +54,7 @@ class ALCDataset:
         self.test_meta = self.test_meta[['file_name', 'bac', 'user_state']]
         self.test_meta = self.__process_meta(self.test_meta)
         
-    def extract_feature(self, split, conf_path):
+    def extract_opensmile_feature(self, split):
         split = split.lower()
         assert split in ('train', 'd1', 'd2', 'test')
         meta = getattr(self, f'{split}_meta')
@@ -51,30 +62,66 @@ class ALCDataset:
         features = []
         for file_name in tqdm(meta['file_name']):
             wav_input_path = os.path.join(self.dataset_path, DATA_PATH, file_name)
-            csv_output_path = "feature.csv"
+            csv_output_path = "opensmile_feature.csv"
             if os.path.exists(csv_output_path):
                 os.remove(csv_output_path)
-            subprocess.run([OPENSMILE_PATH, "-C", conf_path, "-I", wav_input_path, "-csvoutput", csv_output_path])
+            subprocess.run([OPENSMILE_PATH, "-C", OPENSMILE_CONF_PATH, "-I", wav_input_path, "-csvoutput", csv_output_path])
             feature = pd.read_csv(csv_output_path, delimiter=";").iloc[0, 2:].to_numpy()
-            features.append(feature)
-                    
+            features.append(feature)                    
         features = np.stack(features)
+        labels = meta['label'].to_numpy()
         
-        if not os.path.exists(FEATURE_PATH):
-            os.mkdir(FEATURE_PATH)
-        np.save(os.path.join(FEATURE_PATH, f'{split}_x.npy'), features)
+        if not os.path.exists(OPENSMILE_FEATURE_PATH):
+            os.mkdir(OPENSMILE_FEATURE_PATH)
+        np.save(os.path.join(OPENSMILE_FEATURE_PATH, f'{split}_x.npy'), features)
+        np.save(os.path.join(OPENSMILE_FEATURE_PATH, f'{split}_y.npy'), labels)
             
-        return features
+        return features, labels
+    
+    def extract_surfboard_feature(self, split):
+        split = split.lower()
+        assert split in ('train', 'd1', 'd2', 'test')
+        meta = getattr(self, f'{split}_meta')
+        
+        sounds = []
+        for file_name in tqdm(meta['file_name']):
+            sound = Waveform(path=os.path.join(self.dataset_path, DATA_PATH, file_name))
+            sounds.append(sound)       
+        features_df = extract_features(sounds, SURFBOARD_COMPONENTS, SURFBOARD_STATISTICS)
+        features = features_df.to_numpy()
+        labels = meta['label'].to_numpy()
+        
+        if not os.path.exists(SURFBOARD_FEATURE_PATH):
+            os.makedirs(SURFBOARD_FEATURE_PATH)            
+        np.save(os.path.join(SURFBOARD_FEATURE_PATH, f'{split}_x.npy'), features)
+        np.save(os.path.join(SURFBOARD_FEATURE_PATH, f'{split}_y.npy'), labels)
+            
+        return features, labels
     
     
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='args for processing dataset')
+    parser.add_argument('--toolbox', '-t', help='toolbox to extract features', default='surfboard')
+    args = parser.parse_args()
+    
     dataset = ALCDataset(DATASET_PATH)
-    print("Extracting features from train set...")
-    f_train = dataset.extract_feature("train", CONF_PATH)
-    print("Extracting features from dev1 set...")
-    f_d1 = dataset.extract_feature("d1", CONF_PATH)
-    print("Extracting features from dev2 set...")
-    f_d2 = dataset.extract_feature("d2", CONF_PATH)
-    print("Extracting features from test set...")
-    f_test = dataset.extract_feature("test", CONF_PATH)
-    print("Finished!")
+    if args.toolbox == 'opensmile':
+        print("Extracting opensmile features from train set...")
+        feature_train, label_train = dataset.extract_opensmile_feature("train")
+        print("Extracting opensmile features from dev1 set...")
+        feature_d1, label_d1 = dataset.extract_opensmile_feature("d1")
+        print("Extracting opensmile features from dev2 set...")
+        feature_d2, label_d2 = dataset.extract_opensmile_feature("d2")
+        print("Extracting opensmile features from test set...")
+        feature_test, label_test = dataset.extract_opensmile_feature("test")
+        print("Finished!")
+    if args.toolbox == 'surfboard':
+        print("Extracting surfboard features from train set...")
+        feature_train, label_train = dataset.extract_surfboard_feature("train")
+        print("Extracting surfboard features from dev1 set...")
+        feature_d1, label_d1 = dataset.extract_surfboard_feature("d1")
+        print("Extracting surfboard features from dev2 set...")
+        feature_d2, label_d2 = dataset.extract_surfboard_feature("d2")
+        print("Extracting surfboard features from test set...")
+        feature_test, label_test = dataset.extract_surfboard_feature("test")
+        print("Finished!")
