@@ -58,7 +58,10 @@ if __name__ == "__main__":
     print('Finished!')
     
     print('Inference...')
-    feature = get_feature(args.input)
+    if args.feature == 'surfboard':
+        feature = get_surfboard_feature(args.input)
+    if args.feature == 'opensmile':
+        feature = get_opensmile_feature(args.input)
     prediction = model.predict([feature])
     print('Prediction result: ', prediction[0])
 
