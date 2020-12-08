@@ -85,7 +85,7 @@ class ALCDataset:
         
         sounds = []
         for file_name in tqdm(meta['file_name']):
-            sound = Waveform(path=os.path.join(self.dataset_path, DATA_PATH, file_name))
+            sound = Waveform(path=os.path.join(self.dataset_path, DATA_PATH, file_name), sample_rate=SR)
             sounds.append(sound)       
         features_df = extract_features(sounds, SURFBOARD_COMPONENTS, SURFBOARD_STATISTICS)
         features = features_df.to_numpy()

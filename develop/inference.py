@@ -33,7 +33,7 @@ def get_opensmile_feature(wav_input_path):
     feature = pd.read_csv("opensmile_feature.csv", delimiter=";").iloc[0, 2:].to_numpy()
     return feature
 
-def get_surfboard_feature(wav_input_path):
+def get_surfboard_feature(wav_input_paths, sample_rate):
     sound = Waveform(path=wav_input_path)
     feature_df = extract_features([sound], SURFBOARD_COMPONENTS, SURFBOARD_STATISTICS)
     feature = feature_df.iloc[0].to_numpy()
@@ -45,6 +45,7 @@ if __name__ == "__main__":
     parser.add_argument('--feature', '-f', help='feature extraction toolbox', default='surfboard')
     parser.add_argument('--model', '-M', help='machine learning model', default='svm')
     parser.add_argument('--input', '-I', help='input wav file', required=True)
+    parser.add_argument('--sr', '-s', help='sample rate', default=16000)
     args = parser.parse_args()
     
     if args.feature == 'surfboard':
@@ -59,7 +60,7 @@ if __name__ == "__main__":
     
     print('Inference...')
     if args.feature == 'surfboard':
-        feature = get_surfboard_feature(args.input)
+        feature = get_surfboard_feature(args.input, args.sr)
     if args.feature == 'opensmile':
         feature = get_opensmile_feature(args.input)
     prediction = model.predict([feature])

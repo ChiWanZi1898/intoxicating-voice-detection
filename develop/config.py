@@ -1,5 +1,6 @@
 # alc dataset
 DATASET_PATH = "/Users/mazeyu/Desktop/CMU/20fall/18797/project/data"
+SR = 16000
 
 # opensmile
 OPENSMILE_PATH = "/Users/mazeyu/Desktop/CMU/20fall/18797/project/opensmile/opensmile/build/progsrc/smilextract/SMILExtract"
