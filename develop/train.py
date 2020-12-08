@@ -25,7 +25,7 @@ class ALCModel:
         
         if method == 'logistic':
             # https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
-            self.clf = LogisticRegression(penalty='l1', solver='saga', C=1.0, n_jobs=8)
+            self.clf = LogisticRegression(penalty='l2', C=1.0, n_jobs=8)
         elif method == 'neighbor':
             # https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html
             self.clf = KNeighborsClassifier(n_neighbors=5, leaf_size=30, n_jobs=8)
@@ -43,7 +43,7 @@ class ALCModel:
             self.clf = AdaBoostClassifier(n_estimators=100, learning_rate=1.0)
         elif method == 'gradboost':
             # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
-            self.clf = GradientBoostingClassifier(n_estimators=200, learning_rate=0.1)
+            self.clf = GradientBoostingClassifier(n_estimators=200, learning_rate=0.1, verbose=True)
         else:
             raise NotImplementedError
         
@@ -76,7 +76,7 @@ class ALCModel:
 
 def load_data(feature='surfboard', method='full', dimension=50, use_dev=True, balance=True):
     assert feature in ['surfboard', 'opensmile']
-    assert dim_reduct in ['full', 'pca', 'ica']
+    assert method in ['full', 'pca', 'ica']
     
     if feature == 'surfboard':
         feature_path = SURFBOARD_FEATURE_PATH
