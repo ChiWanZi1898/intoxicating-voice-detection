@@ -33,7 +33,7 @@ def get_opensmile_feature(wav_input_path):
     feature = pd.read_csv("opensmile_feature.csv", delimiter=";").iloc[0, 2:].to_numpy()
     return feature
 
-def get_surfboard_feature(wav_input_paths, sample_rate):
+def get_surfboard_feature(wav_input_path, sample_rate):
     sound = Waveform(path=wav_input_path)
     feature_df = extract_features([sound], SURFBOARD_COMPONENTS, SURFBOARD_STATISTICS)
     feature = feature_df.iloc[0].to_numpy()
